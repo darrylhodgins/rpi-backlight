@@ -3,28 +3,38 @@ var fs = require('fs');
 
 var backlightPath = '/sys/class/backlight/rpi_backlight';
 
+var isHardwareSupported = fs.existsSync(backlightPath);
+
+if (!isHardwareSupported) {
+    console.warn('Backlight control not supported (' + backlightPath + ' does not exist)');
+}
+
 function writeValue(fileName, value) {
     return new Promise((resolve, reject) => {
-        var fullPath = path.join(backlightPath, fileName);
-        fs.writeFile(fullPath, value, (err) => {
-            if (err !== null) reject(err);
-            else resolve();
-        });
+        if (isHardwareSupported) {
+            var fullPath = path.join(backlightPath, fileName);
+            fs.writeFile(fullPath, value, (err) => {
+                if (err !== null) reject(err);
+                else resolve();
+            });
+        } else {
+            reject('Backlight control not supported (' + backlightPath + ' does not exist)');
+        }
     });
 }
 
 function readValue(fileName, value) {
     return new Promise((resolve, reject) => {
-        var fullPath = path.join(backlightPath, fileName);
-        fs.readFile(fullPath, 'utf8', (err, data) => {
-            if (err !== null) reject(err);
-            else resolve(data);
-        });
+        if (isHardwareSupported) {
+            var fullPath = path.join(backlightPath, fileName);
+            fs.readFile(fullPath, 'utf8', (err, data) => {
+                if (err !== null) reject(err);
+                else resolve(data);
+            });
+        } else {
+            reject('Backlight control not supported (' + backlightPath + ' does not exist)');
+        }
     });
-}
-
-if (!fs.existsSync(backlightPath)) {
-    throw new Error('Backlight control not supported (' + backlightPath + ' does not exist)');
 }
 
 /** Power managment */
